@@ -14,8 +14,8 @@ services:
     - 8080:8080
     restart: on-failure:0
     environment:
-      OPENAI_APIKEY: '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'
-      COHERE_APIKEY: $COHERE_APIKEY
+      # OPENAI_APIKEY: $OPENAI_APIKEY
+      # COHERE_APIKEY: $COHERE_APIKEY
       QUERY_DEFAULTS_LIMIT: 25
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
       DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'

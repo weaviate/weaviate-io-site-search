@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 WEAVIATE_LOGIN = os.environ['WEAVIATE_LOGIN']
 WEAVIATE_PASS = os.environ['WEAVIATE_PASS']
 WEAVIATE_HOST = os.environ['WEAVIATE_HOST']
+OPENAI_APIKEY = os.environ['OPENAI_APIKEY']
 
 
 def replace_url_to_link(s):
@@ -199,21 +200,6 @@ def create_weaviate_schema(client):
     client.schema.create_class(class_obj)
 
 
-# def add_to_weaviate(typeOfItem, client, parsed_content, c):
-
-#     for chunk in parsed_content:
-#         # chunk['typeOfItem'] = typeOfItem
-#         try:
-#             # if chunk['content'] != '':
-#             data_uuid = client.data_object.create(
-#                 chunk,
-#                 "PageChunkOpenAI"
-#             )
-#             print(c, data_uuid)
-#         except: 
-#             print('FAILED')
-
-
 if __name__ == "__main__":
 
     try:
@@ -231,7 +217,9 @@ if __name__ == "__main__":
             url=WEAVIATE_HOST,
             timeout_config=600,
             auth_client_secret=weaviate.AuthClientPassword(WEAVIATE_LOGIN, WEAVIATE_PASS)
-
+            additional_headers={
+                "X-OpenAI-Api-Key": OPENAI_APIKEY
+            }
         )
 
         client.batch.configure(
