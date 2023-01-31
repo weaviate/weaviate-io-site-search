@@ -1,1 +1,1 @@
-# weaviate-io-site-search
+# Weaviate Site Search
