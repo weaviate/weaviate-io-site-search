@@ -216,7 +216,7 @@ if __name__ == "__main__":
         client = weaviate.Client(
             url=WEAVIATE_HOST,
             timeout_config=600,
-            auth_client_secret=weaviate.AuthClientPassword(WEAVIATE_LOGIN, WEAVIATE_PASS)
+            auth_client_secret=weaviate.AuthClientPassword(WEAVIATE_LOGIN, WEAVIATE_PASS),
             additional_headers={
                 "X-OpenAI-Api-Key": OPENAI_APIKEY
             }
