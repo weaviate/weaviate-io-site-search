@@ -1,0 +1,33 @@
+---
+version: '3.4'
+services:
+  weaviate:
+    command:
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8080'
+    - --scheme
+    - http
+    image: semitechnologies/weaviate:1.17.2
+    ports:
+    - 8080:8080
+    restart: on-failure:0
+    environment:
+      OPENAI_APIKEY: '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'
+      COHERE_APIKEY: $COHERE_APIKEY
+      QUERY_DEFAULTS_LIMIT: 25
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
+      ENABLE_MODULES: 'text2vec-openai,text2vec-cohere,ref2vec-centroid,generative-openai'
+      CLUSTER_HOSTNAME: 'weaviate-site-search'
+      # AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      AUTHENTICATION_OIDC_ENABLED: 'true'
+      AUTHENTICATION_OIDC_ISSUER: 'https://auth.wcs.api.weaviate.io/auth/realms/SeMI'
+      AUTHENTICATION_OIDC_CLIENT_ID: 'wcs'
+      AUTHENTICATION_OIDC_USERNAME_CLAIM: 'email'
+      AUTHENTICATION_OIDC_GROUPS_CLAIM: 'groups'
+      AUTHORIZATION_ADMINLIST_ENABLED: 'false'
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      AUTHORIZATION_ADMINLIST_USERS: 'bob@weaviate.io'
+...
