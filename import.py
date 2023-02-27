@@ -57,9 +57,14 @@ def parse_titles_and_content(html, mdf, path):
     # find the doc title
     findIntroArray = html.split("\n")
     doc_title = ''
+    url = mdf.replace('.mdx', '.md').replace('/index.md', '').replace('.md', '').replace(path, '').replace('./', '/'),
     for l in findIntroArray:
         if l.startswith('title: '):
             doc_title = l.replace('title: ', '')
+        # Update url if slug provided
+        elif l.startswith('slug'):
+            if '/blog/' in mdf:
+                url = '/blog/' + l.replace('slug: ', '').replace(' ', '', 100)
 
     # split the headers
     content_array = []
@@ -72,7 +77,7 @@ def parse_titles_and_content(html, mdf, path):
         if len(title) > 0:
             content_array.append({
                 'title': title[0].get_text(),
-                'url': mdf.replace('.md', '.html').replace('./', '/').replace(path, ''),
+                'url': url,
                 'anchor': replace_url_to_link(title[0].get_text()),
                 'content': find_and_remove_includes(soup.get_text().replace(title[0].get_text(), '').replace('\n', ' ')).strip(),
                 'order': i,
