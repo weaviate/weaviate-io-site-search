@@ -57,10 +57,10 @@ def parse_titles_and_content(html, mdf, path):
     # find the doc title
     findIntroArray = html.split("\n")
     doc_title = ''
-    url = mdf.replace('.mdx', '.md').replace('/index.md', '').replace('.md', '').replace(path, '').replace('./', '/'),
+    url = parse_url(mdf, path)
     for l in findIntroArray:
-        if l.startswith('title: '):
-            doc_title = l.replace('title: ', '')
+        if contains_title(l):
+            doc_title = get_title(l)
         # Update url if slug provided
         elif l.startswith('slug'):
             if '/blog/' in mdf:
@@ -204,6 +204,26 @@ def create_weaviate_schema(client):
 
     client.schema.create_class(class_obj)
 
+def skip_hidden(file, dir):
+    return file.startswith('_') or re.search(r'/_', subdir) is not None
+
+def is_markdown(file):
+    return re.search(r'\.mdx?$', file) is not None
+
+def contains_title(line):
+    return re.search('title:', line) is not None
+def get_title(line):
+    return re.search('title: (.*)', line).group(1)
+
+def parse_url(mdf, path):
+    return (
+        mdf
+        .replace('.mdx', '.md')
+        .replace('/index.md', '')
+        .replace('.md', '')
+        .replace(path, '')
+        .replace('./', '/')
+    )
 
 if __name__ == "__main__":
 
@@ -246,20 +266,26 @@ if __name__ == "__main__":
     with client.batch as batch:
         for subdir, dirs, files in os.walk(rootdir + docsdir):
             for file in files:
-                if file[-3:] == '.md':
+                if skip_hidden(file, subdir):
+                    continue;
+                if is_markdown(file):
                     parsed = open_markdown_file(os.path.join(subdir, file), rootdir)
                     c += len(parsed)
                     for chunk in parsed:
+                        chunk['typeOfItem']='docs'
                         batch.add_data_object(chunk, 'PageChunkOpenAI')
 
     # Add blogs
     with client.batch as batch:
         for subdir, dirs, files in os.walk(rootdir + blogdir):
             for file in files:
-                if file[-4:] == '.mdx':    
+                if skip_hidden(file, subdir):
+                    continue;
+                if is_markdown(file):
                     parsed = open_markdown_file(os.path.join(subdir, file), rootdir)
                     c += len(parsed)
                     for chunk in parsed:
+                        chunk['typeOfItem']='blog'
                         batch.add_data_object(chunk, 'PageChunkOpenAI')
 
     print('Done', c)
