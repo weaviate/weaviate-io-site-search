@@ -109,11 +109,9 @@ def create_weaviate_schema(client):
         },
         "properties": [
             {
-                "dataType": [
-                    "string"
-                ],
-                "description": "Title of the chunk",
                 "name": "title",
+                "dataType": [ "text" ],
+                "description": "Title of the chunk",
                 "moduleConfig": {
                     "text2vec-openai": {
                         "skip": False,
@@ -122,50 +120,9 @@ def create_weaviate_schema(client):
                 }
             },
             {
-                "dataType": [
-                    "string"
-                ],
-                "description": "Anchor of the chunk on the page",
-                "name": "anchor",
-                "moduleConfig": {
-                    "text2vec-openai": {
-                        "skip": True,
-                        "vectorizePropertyName": False
-                    }
-                }
-            },
-            {
-                "dataType": [
-                    "string"
-                ],
-                "description": "Url of the page",
-                "name": "url",
-                "moduleConfig": {
-                    "text2vec-openai": {
-                        "skip": True,
-                        "vectorizePropertyName": False
-                    }
-                }
-            },
-            {
-                "dataType": [
-                    "string"
-                ],
-                "description": "Type of the item",
-                "name": "typeOfItem",
-                "moduleConfig": {
-                    "text2vec-openai": {
-                        "skip": True,
-                        "vectorizePropertyName": False
-                    }
-                }
-            },
-            {
-                "dataType": [
-                    "text"
-                ],
-                "description": "The content of the chunk",
                 "name": "content",
+                "dataType": [ "text" ],
+                "description": "The content of the chunk",
                 "moduleConfig": {
                     "text2vec-openai": {
                         "skip": False,
@@ -174,11 +131,9 @@ def create_weaviate_schema(client):
                 }
             },
             {
-                "dataType": [
-                    "int"
-                ],
-                "description": "Order of the item on the page",
-                "name": "order",
+                "name": "anchor",
+                "dataType": [ "string" ],
+                "description": "Anchor of the chunk on the page",
                 "moduleConfig": {
                     "text2vec-openai": {
                         "skip": True,
@@ -187,11 +142,42 @@ def create_weaviate_schema(client):
                 }
             },
             {
-                "dataType": [
-                    "string"
-                ],
-                "description": "Title of the page",
+                "name": "url",
+                "dataType": [ "string" ],
+                "description": "Url of the page",
+                "moduleConfig": {
+                    "text2vec-openai": {
+                        "skip": True,
+                        "vectorizePropertyName": False
+                    }
+                }
+            },
+            {
+                "name": "typeOfItem",
+                "dataType": [ "string" ],
+                "description": "Type of the item",
+                "moduleConfig": {
+                    "text2vec-openai": {
+                        "skip": True,
+                        "vectorizePropertyName": False
+                    }
+                }
+            },
+            {
+                "name": "order",
+                "dataType": [ "int" ],
+                "description": "Order of the item on the page",
+                "moduleConfig": {
+                    "text2vec-openai": {
+                        "skip": True,
+                        "vectorizePropertyName": False
+                    }
+                }
+            },
+            {
                 "name": "pageTitle",
+                "dataType": [ "string" ],
+                "description": "Title of the page",
                 "moduleConfig": {
                     "text2vec-openai": {
                         "skip": True,
