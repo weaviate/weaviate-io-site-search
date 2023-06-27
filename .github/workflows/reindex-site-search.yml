@@ -8,7 +8,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-    
+
   # run every day at midnight
   schedule:
   - cron: "0 0 * * *"
@@ -17,11 +17,6 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    env:
-      WEAVIATE_LOGIN: ${{ secrets.WEAVIATE_LOGIN }}
-      WEAVIATE_PASS: ${{ secrets.WEAVIATE_PASS }}
-      WEAVIATE_HOST: ${{ secrets.WEAVIATE_HOST }}
-      OPENAI_APIKEY: ${{ secrets.OPENAI_APIKEY }}
     strategy:
       fail-fast: false
       matrix:
@@ -45,4 +40,9 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Reindex docs and blogs
-      run: python3 ./import.py $PWD/weaviate-io /developers/weaviate /blog
+      env:
+        WEAVIATE_LOGIN: ${{ secrets.WEAVIATE_LOGIN }}
+        WEAVIATE_PASS: ${{ secrets.WEAVIATE_PASS }}
+        WEAVIATE_HOST: ${{ secrets.WEAVIATE_HOST }}
+        OPENAI_APIKEY: ${{ secrets.OPENAI_APIKEY }}
+      run: python ./import.py $PWD/weaviate-io /developers/weaviate /blog
