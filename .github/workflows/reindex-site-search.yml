@@ -41,8 +41,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Reindex docs and blogs
       env:
-        WEAVIATE_LOGIN: ${{ secrets.WEAVIATE_LOGIN }}
-        WEAVIATE_PASS: ${{ secrets.WEAVIATE_PASS }}
+        WEAVIATE_API_KEY: ${{ secrets.WEAVIATE_API_KEY }}
         WEAVIATE_HOST: ${{ secrets.WEAVIATE_HOST }}
         OPENAI_APIKEY: ${{ secrets.OPENAI_APIKEY }}
       run: python ./import.py $PWD/weaviate-io /developers/weaviate /blog

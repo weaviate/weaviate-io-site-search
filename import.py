@@ -5,8 +5,7 @@ import sys
 import weaviate
 from bs4 import BeautifulSoup
 
-WEAVIATE_LOGIN = os.environ['WEAVIATE_LOGIN']
-WEAVIATE_PASS = os.environ['WEAVIATE_PASS']
+WEAVIATE_API_KEY = os.environ['WEAVIATE_API_KEY']
 WEAVIATE_HOST = os.environ['WEAVIATE_HOST']
 OPENAI_APIKEY = os.environ['OPENAI_APIKEY']
 
@@ -241,7 +240,7 @@ if __name__ == "__main__":
         client = weaviate.Client(
             url=WEAVIATE_HOST,
             timeout_config=600,
-            auth_client_secret=weaviate.AuthClientPassword(WEAVIATE_LOGIN, WEAVIATE_PASS),
+            auth_client_secret=weaviate.AuthApiKey(api_key=WEAVIATE_API_KEY),
             additional_headers={
                 "X-OpenAI-Api-Key": OPENAI_APIKEY
             }
