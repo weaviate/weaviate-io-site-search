@@ -1,6 +1,8 @@
 language: python
+dist: jammy
+os: linux
 python:
-- '3.9'
+- '3.11'
 install:
 - pip install -r requirements.txt
 script:
