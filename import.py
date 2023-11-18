@@ -5,11 +5,9 @@ import sys
 import weaviate
 from bs4 import BeautifulSoup
 
-WEAVIATE_LOGIN = os.environ['WEAVIATE_LOGIN']
-WEAVIATE_PASS = os.environ['WEAVIATE_PASS']
-WEAVIATE_HOST = os.environ['WEAVIATE_HOST']
+WCS_HOST = os.environ['WCS_HOST']
+WCS_KEY = os.environ['WCS_KEY']
 OPENAI_APIKEY = os.environ['OPENAI_APIKEY']
-
 
 def replace_url_to_link(s):
     s = re.sub(r'[^a-zA-Z0-9_ ]', '', s)
@@ -238,10 +236,12 @@ if __name__ == "__main__":
         exit(1)
 
     try:
+        auth_config = weaviate.AuthApiKey(api_key=WCS_KEY)
+
         client = weaviate.Client(
-            url=WEAVIATE_HOST,
+            url=WCS_HOST,
+            auth_client_secret=auth_config,
             timeout_config=600,
-            auth_client_secret=weaviate.AuthClientPassword(WEAVIATE_LOGIN, WEAVIATE_PASS),
             additional_headers={
                 "X-OpenAI-Api-Key": OPENAI_APIKEY
             }
