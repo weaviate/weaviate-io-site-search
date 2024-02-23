@@ -5,11 +5,52 @@ import sys
 import weaviate
 from bs4 import BeautifulSoup
 
-WEAVIATE_LOGIN = os.environ['WEAVIATE_LOGIN']
-WEAVIATE_PASS = os.environ['WEAVIATE_PASS']
-WEAVIATE_HOST = os.environ['WEAVIATE_HOST']
-OPENAI_APIKEY = os.environ['OPENAI_APIKEY']
+WCS_URL = os.environ['WEAVIATE_SEARCH_URL']
+WCS_KEY = os.environ['WEAVIATE_SEARCH_KEY_WRITE']
 
+def connect_to_weaviate():
+    print("> INFO: Connecting to WCS")
+    client = weaviate.connect_to_wcs(
+        cluster_url=WCS_URL,
+        auth_credentials=weaviate.auth.AuthApiKey(WCS_KEY),
+        # headers={
+        #     "X-OpenAI-Api-Key": os.environ['OPENAI_API_KEY']
+        # },
+        additional_config=weaviate.config.AdditionalConfig(timeout=(60, 120))
+    )
+
+    print("> INFO: client.is_ready() >> ", client.is_ready())
+    
+    return client
+
+def recreate_chunk_collection(client):
+    import weaviate.classes.config as wq
+    from weaviate.classes.config import Property, DataType
+
+    print("> INFO: Recreating PageChunk collection")
+
+    if(client.collections.exists("PageChunk")):
+        client.collections.delete("PageChunk")
+
+    client.collections.create(
+        name="PageChunk",
+        vectorizer_config=wq.Configure.Vectorizer.text2vec_openai(
+            model="ADA",
+            model_version="002"
+        ),
+
+        properties=[
+            Property(name="title", data_type=DataType.TEXT),
+            Property(name="content", data_type=DataType.TEXT),
+            Property(name="anchor", data_type=DataType.TEXT, skip_vectorization=True),
+            Property(name="url", data_type=DataType.TEXT, skip_vectorization=True),
+            Property(name="typeOfItem", data_type=DataType.TEXT, skip_vectorization=True),
+            Property(name="order", data_type=DataType.INT, skip_vectorization=True),
+            Property(name="pageTitle", data_type=DataType.TEXT, skip_vectorization=True),
+        ]
+    )
+
+    print("> INFO: Recreating PageChunk collection > DONE")
 
 def replace_url_to_link(s):
     s = re.sub(r'[^a-zA-Z0-9_ ]', '', s)
@@ -93,117 +134,6 @@ def open_markdown_file(mdf, path):
         return page_content_array
 
 
-def create_weaviate_schema(client):
-
-    client.schema.delete_all()
-
-    class_obj = {
-        "class": "PageChunkOpenAI",
-        "description": "A chunk of a page with potential answers",
-        "moduleConfig": {
-            "text2vec-openai": {
-                "model": "ada",
-                "modelVersion": "002",
-                "type": "text"
-            }
-        },
-        "properties": [
-            {
-                "dataType": [
-                    "string"
-                ],
-                "description": "Title of the chunk",
-                "name": "title",
-                "moduleConfig": {
-                    "text2vec-openai": {
-                        "skip": False,
-                        "vectorizePropertyName": False
-                    }
-                }
-            },
-            {
-                "dataType": [
-                    "string"
-                ],
-                "description": "Anchor of the chunk on the page",
-                "name": "anchor",
-                "moduleConfig": {
-                    "text2vec-openai": {
-                        "skip": True,
-                        "vectorizePropertyName": False
-                    }
-                }
-            },
-            {
-                "dataType": [
-                    "string"
-                ],
-                "description": "Url of the page",
-                "name": "url",
-                "moduleConfig": {
-                    "text2vec-openai": {
-                        "skip": True,
-                        "vectorizePropertyName": False
-                    }
-                }
-            },
-            {
-                "dataType": [
-                    "string"
-                ],
-                "description": "Type of the item",
-                "name": "typeOfItem",
-                "moduleConfig": {
-                    "text2vec-openai": {
-                        "skip": True,
-                        "vectorizePropertyName": False
-                    }
-                }
-            },
-            {
-                "dataType": [
-                    "text"
-                ],
-                "description": "The content of the chunk",
-                "name": "content",
-                "moduleConfig": {
-                    "text2vec-openai": {
-                        "skip": False,
-                        "vectorizePropertyName": False
-                    }
-                }
-            },
-            {
-                "dataType": [
-                    "int"
-                ],
-                "description": "Order of the item on the page",
-                "name": "order",
-                "moduleConfig": {
-                    "text2vec-openai": {
-                        "skip": True,
-                        "vectorizePropertyName": False
-                    }
-                }
-            },
-            {
-                "dataType": [
-                    "string"
-                ],
-                "description": "Title of the page",
-                "name": "pageTitle",
-                "moduleConfig": {
-                    "text2vec-openai": {
-                        "skip": True,
-                        "vectorizePropertyName": False
-                    }
-                }
-            },
-        ]
-    }
-
-    client.schema.create_class(class_obj)
-
 def skip_hidden(file, dir):
     return file.startswith('_') or re.search(r'/_', subdir) is not None
 
@@ -234,36 +164,25 @@ if __name__ == "__main__":
         if os.path.exists(rootdir) == False or os.path.exists(rootdir + docsdir) == False or os.path.exists(rootdir + blogdir) == False:
             raise Exception()
     except:
-        print('This paths don\'t exist')
+        print(">> ERROR >> This paths don't exist. Check args passed to import.")
         exit(1)
 
     try:
-        client = weaviate.Client(
-            url=WEAVIATE_HOST,
-            timeout_config=600,
-            auth_client_secret=weaviate.AuthClientPassword(WEAVIATE_LOGIN, WEAVIATE_PASS),
-            additional_headers={
-                "X-OpenAI-Api-Key": OPENAI_APIKEY
-            }
-        )
-
-        client.batch.configure(
-            timeout_retries=3,
-            batch_size=100, 
-            dynamic=False,
-        )
-
-        create_weaviate_schema(client)
+        client = connect_to_weaviate()
+        recreate_chunk_collection(client)
     except:
-        print("Can't reach VM for Weaviate, continue without updating search")
-        exit(0)
+        print(">> ERROR >> Can't reach VM for Weaviate, continue without updating search")
+        exit(1)
 
     c = 0
 
-    print('Start import')
+    print("> INFO: Start import")
+
+    chunk_collection = client.collections.get("PageChunk")
 
     # Add docs
-    with client.batch as batch:
+    with chunk_collection.batch.fixed_size(25, 1) as batch:
+    # with client.batch as batch:
         for subdir, dirs, files in os.walk(rootdir + docsdir):
             for file in files:
                 if skip_hidden(file, subdir):
@@ -273,10 +192,23 @@ if __name__ == "__main__":
                     c += len(parsed)
                     for chunk in parsed:
                         chunk['typeOfItem']='docs'
-                        batch.add_data_object(chunk, 'PageChunkOpenAI')
+                        batch.add_object(properties=chunk)
+    
+    
+    # we can accept a few errors
+    if(len(chunk_collection.batch.failed_objects) > 20):
+        print(">>> ERROR >>> There were several (", len(chunk_collection.batch.failed_objects) ,") errors during batch import for [docs]. Printing the first 3.")
+        for err in chunk_collection.batch.failed_objects[:3]:
+            print (err.object_)
+            print (err.message, "\n")
+
+        exit(1)
+    else:
+        # clear, in case there were a few errors
+        chunk_collection.batch.failed_objects.clear()
 
     # Add blogs
-    with client.batch as batch:
+    with chunk_collection.batch.fixed_size(25, 1) as batch:
         for subdir, dirs, files in os.walk(rootdir + blogdir):
             for file in files:
                 if skip_hidden(file, subdir):
@@ -286,6 +218,16 @@ if __name__ == "__main__":
                     c += len(parsed)
                     for chunk in parsed:
                         chunk['typeOfItem']='blog'
-                        batch.add_data_object(chunk, 'PageChunkOpenAI')
+                        batch.add_object(properties=chunk)
 
-    print('Done', c)
+    # we can accept a few errors
+    if(len(chunk_collection.batch.failed_objects) > 20):
+        print(">>> ERROR >>> There were several (", len(chunk_collection.batch.failed_objects) ,") errors during batch import for [blog]. Printing the first 3.")
+        for err in chunk_collection.batch.failed_objects[:3]:
+            print (err.object_)
+            print (err.message, "\n")
+        
+        exit(1)
+
+    print(f"> INFO: Done. Imported {c} chunks")
+    client.close()
